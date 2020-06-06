@@ -1,9 +1,9 @@
 data:
-    path: '/data/deepvk/librispeech/dev_clean/dev-clean/'
+    path: '/data/deepvk/librispeech/train_clean_100/train-clean-100'
     waveform_len: 20480
     
 model:
-    predict_steps: 5
+    predict_steps: 12
     context_size: 256
     conv_channels: 512
     
