@@ -1,4 +1,6 @@
 from datetime import datetime as dt
+from tqdm import tqdm
+import os
 
 import torch
 import torch.nn as nn
@@ -12,6 +14,8 @@ from cpc_model import CPCModel
 
 config = Hparam('./cpc_config.yaml')
 gettime = lambda: str(dt.time(dt.now()))[:8]
+if not os.path.isdir('./checkpoints'):
+    os.mkdir('./checkpoints')
 
 
 
@@ -33,11 +37,11 @@ if __name__ == "__main__":
     for e in range(1, config.train.epochs):
         print('[%s] Epoch %2d started' % (gettime(), e))
 
-        for i, batch in enumerate(dataloader, start=1):
+        for i, batch in tqdm(enumerate(dataloader, start=1)):
             opt.zero_grad()
 
             if i % config.train.log_every == 0:
-                print('  [%s] Batch %d' % i)
+                print('  [%s] Batch %d' % (gettime(), i))
 
             speakers, utters = batch
             logits, labels = model(utters.unsqueeze(1).to(config.train.device))
@@ -54,4 +58,4 @@ if __name__ == "__main__":
             opt.step()
 
         if e % config.train.save_every == 0:
-            torch.save(model.state_dict(), config.train.save_name + '_%d_epoch.pt' % e)
+            torch.save(model.state_dict(), config.train.checkpoints_dir + '/' + config.train.save_name + '_%d_epoch.pt' % e)

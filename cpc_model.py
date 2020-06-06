@@ -63,7 +63,7 @@ class CPCModel(nn.Module):
             #print('before logit', 'z', z.size(), 'est', estimated.size())
             logit = torch.bmm(z.permute(0, 2, 1), estimated) # b x f x f
         
-            label = torch.eye(logit.size(2) - (i+1)).cuda()
+            label = torch.eye(logit.size(2) - (i+1)).to(config.train.device)
             label = F.pad(label, (0, i+1, i+1, 0))
             label = label.unsqueeze(0).expand_as(logit)
             

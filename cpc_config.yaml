@@ -11,8 +11,9 @@ model:
 train:
     lr: 0.0002
     batch_size: 11
-    epochs: 5
+    epochs: 100
     save_every: 1
     log_every: 200
     save_name: 'ctc_model'
     device: 'cuda:0'
+    checkpoints_dir: 'checkpoints'
