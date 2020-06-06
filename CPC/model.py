@@ -1,15 +1,14 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from hparams import Hparam
-config = Hparam('./cpc_config.yaml')
+from torchsummaryX import summary
 
 
 
 class CPCModel(nn.Module):
     def __init__(self, config):
         super(CPCModel, self).__init__()
+        self.device = config.train.device
         strides = [5, 4, 2, 2, 2]
         kernels = [10,8, 4, 4, 4]
         padding = [2, 2, 2, 2, 1]
@@ -63,7 +62,7 @@ class CPCModel(nn.Module):
             #print('before logit', 'z', z.size(), 'est', estimated.size())
             logit = torch.bmm(z.permute(0, 2, 1), estimated) # b x f x f
         
-            label = torch.eye(logit.size(2) - (i+1)).to(config.train.device)
+            label = torch.eye(logit.size(2) - (i+1)).to(self.device)
             label = F.pad(label, (0, i+1, i+1, 0))
             label = label.unsqueeze(0).expand_as(logit)
             
@@ -80,3 +79,10 @@ class CPCModel(nn.Module):
             logits[logits < 0.5] = 0
             acc = (logits == labels).sum().float() / logits.numel()
             return acc
+
+    
+    def get_summary(self, sample):
+        # sample is 1d tensor
+        sample = sample.unsqueeze(0).unsqueeze(0)
+        # it yields to jupyter cell automatically without returning it as value
+        summary(self, sample.to(self.device))

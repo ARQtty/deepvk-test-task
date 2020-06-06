@@ -12,7 +12,7 @@ from data.dataset import SpeechDataset
 from cpc_model import CPCModel
 
 
-config = Hparam('./cpc_config.yaml')
+config = Hparam('./CPC/config.yaml')
 gettime = lambda: str(dt.time(dt.now()))[:8]
 if not os.path.isdir('./checkpoints'):
     os.mkdir('./checkpoints')
