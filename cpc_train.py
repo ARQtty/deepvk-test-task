@@ -33,8 +33,11 @@ if __name__ == "__main__":
     for e in range(1, config.train.epochs):
         print('[%s] Epoch %2d started' % (gettime(), e))
 
-        for i, batch in enumerate(dataloader):
+        for i, batch in enumerate(dataloader, start=1):
             opt.zero_grad()
+
+            if i % config.train.log_every == 0:
+                print('  [%s] Batch %d' % i)
 
             speakers, utters = batch
             logits, labels = model(utters.unsqueeze(1).to(config.train.device))

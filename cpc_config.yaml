@@ -1,17 +1,18 @@
 data:
     path: '/data/deepvk/librispeech/dev_clean/dev-clean'
     waveform_len: 20480
-    
+
 model:
     predict_steps: 12
     context_size: 256
     conv_channels: 512
-    
-    
+
+
 train:
     lr: 0.0002
     batch_size: 11
     epochs: 5
     save_every: 1
+    log_every: 200
     save_name: 'ctc_model'
     device: 'cuda:0'
