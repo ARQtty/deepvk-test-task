@@ -13,6 +13,7 @@ class CPCModel(nn.Module):
         kernels = [10,8, 4, 4, 4]
         padding = [2, 2, 2, 2, 1]
         self.predict_steps = config.model.predict_steps
+        self.context_size = config.model.context_size
         channels = config.model.conv_channels
         
         self.convolutions = []
@@ -70,6 +71,16 @@ class CPCModel(nn.Module):
             labels.append(label)
             
         return logits, labels
+    
+    
+    def predict(self, x):
+        batch_size = x.size()[0]
+        for conv in self.convolutions:
+            x = conv(x)
+        
+        z = x.permute(0, 2, 1)
+        ctx, state = self.autoregressor(z)
+        return ctx, state
     
     
     @staticmethod

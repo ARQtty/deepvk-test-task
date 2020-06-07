@@ -10,6 +10,7 @@ class SpeechDataset(torch.utils.data.Dataset):
         self.root = root
         self.speakers, self.pathes = SpeechDataset.get_s2u(root)
         self.speaker_ixs = self.get_onehot_mapping(list(set(self.speakers)))
+        self.n_speakers = len(self.speaker_ixs.values())
 
 
     def get_onehot_mapping(self, categories):
