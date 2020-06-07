@@ -1,0 +1,22 @@
+data:
+    path: '/data/deepvk/librispeech/dev_clean/dev-clean'
+    waveform_len: 20480
+
+model:
+    cpc_config_path: 'CPC/config.yaml'
+    hidden_size: 256
+    freeze_cpc_model: True
+
+
+train:
+    lr: 0.0002
+    epochs: 100
+    save_every: 10
+    test_split: 0.1
+    batch_size: 64
+    shuffle_data: True
+    save_name: 'speaker_cpc_classifier'
+    checkpoints_dir: 'checkpoints'
+    device: 'cuda:0'
+    cpc_checkpoint: 'cpc_model_35_epoch.pt'
+    
