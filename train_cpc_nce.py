@@ -66,7 +66,7 @@ if __name__ == "__main__":
         
         
 
-        for i, batch in tqdm(enumerate(testdataloader, start=1)):
+        for i, batch in tqdm(enumerate(test_dataloader, start=1)):
             with torch.no_grad():
                 speakers, utters = batch
                 losses, logits, labels = model(utters.unsqueeze(1).to(config.train.device))

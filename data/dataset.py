@@ -30,7 +30,16 @@ class SpeechDataset(torch.utils.data.Dataset):
                 pathes += list(map(lambda s: '/%s/%s' % (speaker, s), files))
                 
         for i in tqdm(range(len(pathes))):
+            # we should check if song longer then 1,28sec
+            # it's about 40kB
+            
+            # sampling ration is 16k in a whole dataset, so if
+            # file is larger then 50kB, it is defenetly longer then 1.28sec
+            if os.path.getsize(root+pathes[i]) > 50000:
+                continue
+            
             utter, bitrate = torchaudio.load(root + pathes[i])
+            
             if utter.size(1) < 20480:
                 speakers[i] = None
                 pathes[i] = None
