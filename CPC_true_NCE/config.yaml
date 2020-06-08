@@ -1,0 +1,21 @@
+data:
+    path: '/data/deepvk/librispeech/dev_clean/dev-clean'
+    waveform_len: 20480
+
+model:
+    predict_steps: 10
+    context_size: 256
+    conv_channels: 512
+
+
+train:
+    test_size: 0.2
+    lr: 0.0002
+    batch_size: 7
+    neg_samples: 3
+    epochs: 100
+    save_every: 1
+    log_every: 200
+    save_name: 'cpc_nce_model'
+    device: 'cuda:0'
+    checkpoints_dir: 'checkpoints'

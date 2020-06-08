@@ -10,15 +10,17 @@ class SpeakerClassificationCPC(nn.Module):
         self.cpc_model = cpc_model
         self.cpc_model.requires_grad_(not freeze_cpc)
         
-        self.linear = nn.Sequential(nn.Linear(self.cpc_model.context_size, hidden_size),
-                                    nn.BatchNorm1d(hidden_size),
-                                    nn.Tanh(),
-                                    nn.Dropout(0.2),
-                                    nn.Linear(hidden_size, hidden_size//3),
-                                    nn.BatchNorm1d(hidden_size//3),
-                                    nn.Tanh(),
-                                    nn.Dropout(0.2),
-                                    nn.Linear(hidden_size//3, n_speakers)).requires_grad_(True)
+#         self.linear = nn.Sequential(nn.Linear(self.cpc_model.context_size, hidden_size),
+#                                     nn.BatchNorm1d(hidden_size),
+#                                     nn.Tanh(),
+#                                     nn.Dropout(0.2),
+#                                     nn.Linear(hidden_size, hidden_size//3),
+#                                     nn.BatchNorm1d(hidden_size//3),
+#                                     nn.Tanh(),
+#                                     nn.Dropout(0.2),
+#                                     nn.Linear(hidden_size//3, n_speakers)).requires_grad_(True)
+        
+        self.linear = nn.Sequential(nn.Linear(self.cpc_model.context_size, n_speakers))    
         
         
     def load_cpc_checkpoint(self, checkpoint_path):
