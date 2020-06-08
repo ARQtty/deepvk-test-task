@@ -6,8 +6,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+from torch.utils.data.sampler import SubsetRandomSampler
 from tensorboardX import SummaryWriter
-from sklearn.model_selection import train_test_split
 
 from hparams import Hparam
 from data.dataset import SpeechDataset
@@ -26,11 +26,16 @@ if __name__ == "__main__":
 
     print('Extracting data')
     dataset = SpeechDataset(config.data.path)
-    dataset_train, dataset_test = train_test_split(dataset, test_size=config.train.test_size)
-    dataloader_fabric = lambda ds: DataLoader(ds, config.train.batch_size, shuffle=True)
-    train_dataloader = dataloader_fabric(dataset_train)
-    test_dataloader = dataloader_fabric(dataset_test)
+    train_ixs, test_ixs =  dataset.train_test_split_ixs(config.train.test_size)
+    train_sampler = SubsetRandomSampler(train_ixs)
+    test_sampler = SubsetRandomSampler(test_ixs)
+    
+    dataloader_fabric = lambda ds, sampler: DataLoader(ds, config.train.batch_size, sampler=sampler, drop_last=True)
+    train_dataloader = dataloader_fabric(dataset, train_sampler)
+    test_dataloader = dataloader_fabric(dataset, test_sampler)
 
+    
+    print('Creating model')
     model = CPCModel_NCE(config).to(config.train.device)
     opt = torch.optim.Adam(model.parameters(), lr=config.train.lr)
     criterion = F.binary_cross_entropy_with_logits
