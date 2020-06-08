@@ -11,7 +11,15 @@ class SpeechDataset(torch.utils.data.Dataset):
         self.speakers, self.pathes = SpeechDataset.get_s2u(root)
         self.speaker_ixs = self.get_onehot_mapping(list(set(self.speakers)))
         self.n_speakers = len(self.speaker_ixs.values())
+        
+        # sklearn train test split iterates over the dataset when 
+        # splitting it. It costs much, so before func unlock_audion_loading
+        # havent called we would return labels data only (its cheap)
+        self.audio_loading_locked = True
 
+        
+    def unlock_audio_loading(self):
+        self.audio_loading_locked = False
 
     def get_onehot_mapping(self, categories):
         return {cat: i for i, cat in enumerate(sorted(categories))}
@@ -57,6 +65,10 @@ class SpeechDataset(torch.utils.data.Dataset):
         speaker = self.speakers[ix]
         speaker_ix = self.speaker_ixs[speaker]
         path = self.root + self.pathes[ix]
+        
+        if audio_loading_locked:
+            return speaker_ix
+        
         waveform, bitrate = torchaudio.load(path)
         if bitrate != 16000: print('not 16k bitrate!')
         index = np.random.randint(waveform.size(1) - 20480 + 1)
