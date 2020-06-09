@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-NEG_SAMPLES = 1
 
 
 def encoder_fabric(dim_in, dim_out, kernel, stride, padding):
@@ -19,21 +18,22 @@ def encoder_fabric(dim_in, dim_out, kernel, stride, padding):
 
 
 class CPCModule(nn.Module):
-    def __init__(self, conv_dim_in, conv_dim_out, kernel, stride, padding, predicting_steps):
+    def __init__(self, conv_dim_in, conv_dim_out, kernel, stride, padding, config):
         super(CPCModule, self).__init__()
         self.calculate_grads = True
+        self.config = config
 
         self.encoder = encoder_fabric(conv_dim_in, conv_dim_out, kernel, stride, padding)
-        self.autoregressor = nn.GRU(512, 256)
+        self.autoregressor = nn.GRU(config.model.conv_channels, config.model.context_size)
 
         self.transforms = nn.ModuleList([
                                         nn.Sequential(
-                                            nn.Linear(conv_dim_out, 512))
-                                        for k in range(predicting_steps)])
-        self.predicting_steps = predicting_steps
+                                            nn.Linear(conv_dim_out, config.model.conv_channels))
+                                        for k in range(config.model.predict_steps)])
+        self.predicting_steps = config.model.predict_steps
         self.loss = nn.LogSoftmax(dim=1)
 
-        self.opt = torch.optim.Adam(self.parameters(), lr=0.002)
+        self.opt = torch.optim.Adam(self.parameters(), lr=config.train.lr)
 
 
     def set_grad_calc(self, val):
@@ -88,12 +88,12 @@ class CPCModule(nn.Module):
             z_neg = z_negative[:, k:, :]
             #print('    z pos' , z_pos.size(), 'z neg', z_neg.size())
 
-            if NEG_SAMPLES >= x.size(0):
+            if self.config.train.neg_samples >= x.size(0):
                 print('[WARN] positive samples occured in NCE loss')
 
             # create n negative samples for every timestep over the batch
             z_neg_full = z_neg.unsqueeze(1) # b x l x 1 x c
-            for i in range(1, NEG_SAMPLES):
+            for i in range(1, self.config.train.neg_samples):
                 z_neg = self._shift_z_rows(z_neg)
                 z_neg_full = torch.cat((z_neg_full, z_neg.unsqueeze(1)), dim=1)
 
@@ -118,7 +118,7 @@ class CPCModule(nn.Module):
             f_k = torch.matmul(estimated, z_full).squeeze(1) # b*l*(n+1) x 1
 
             # forget about softmax *
-            f_k = f_k.reshape(b*l, NEG_SAMPLES+1)
+            f_k = f_k.reshape(b*l, self.config.train.neg_samples+1)
             #print('    fk size', f_k.size())
 
             loss = self.loss(f_k)

@@ -18,11 +18,11 @@ class GradBlock(nn.Module):
 
 
 class GILModule(nn.Module):
-    def __init__(self, conv_dim_in, conv_dim_out, kernel, stride, padding, predicting_steps):
+    def __init__(self, conv_dim_in, conv_dim_out, kernel, stride, padding, config):
         super(GILModule, self).__init__()
 
         self.gradient_modifier = EmptyModifier # unfreezed
-        self.cpc_module = CPCModule(conv_dim_in, conv_dim_out, kernel, stride, padding, predicting_steps)
+        self.cpc_module = CPCModule(conv_dim_in, conv_dim_out, kernel, stride, padding, config)
         self.grad_block = GradBlock()
 
 

@@ -6,6 +6,7 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 
 from .gil_block import GILModule, GradBlock
 
+
 strides = [5, 4, 2, 2, 2]
 kernels = [10,8, 4, 4, 4]
 padding = [2, 2, 2, 2, 1]
@@ -16,13 +17,19 @@ class GILModel(nn.Module):
     def __init__(self, config):
         super(GILModel, self).__init__()
         self.config = config
+        assert config.train.n_blocks == len(strides) # stupid way to check if we forget to change it
 
         self.gim_modules = nn.ModuleList()
-        for i in range(5):
-            dim = 512
+        for i in range(config.train.n_blocks):
+            dim = config.model.conv_channels
             if i == 0: dim = 1
 
-            module = GILModule(dim, 512, kernels[i], strides[i], padding[i], 2)
+            module = GILModule(dim,
+                               config.model.conv_channels,
+                               kernels[i],
+                               strides[i],
+                               padding[i],
+                               config)
             self.gim_modules.append(module)
 
 

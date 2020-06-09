@@ -3,12 +3,13 @@ data:
     waveform_len: 20480
 
 model:
-    predict_steps: 12
+    predict_steps: 4
     context_size: 256
     conv_channels: 512
 
 
 train:
+    start_epoch: 1
     test_size: 0.2
     lr: 0.0002
     batch_size: 2
@@ -19,6 +20,7 @@ train:
     save_name: 'grad_isolated_model'
     device: 'cuda:0'
     checkpoints_dir: 'checkpoints'
+    n_blocks: 5
     unfreezing:
         skip_freezed_successors: True
         type: 'iterative'
