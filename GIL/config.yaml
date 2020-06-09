@@ -11,11 +11,19 @@ model:
 train:
     test_size: 0.2
     lr: 0.0002
-    batch_size: 4
-    neg_samples: 2
+    batch_size: 2
+    neg_samples: 1
     epochs: 100
     save_every: 1
     log_every: 200
     save_name: 'grad_isolated_model'
     device: 'cuda:0'
     checkpoints_dir: 'checkpoints'
+    unfreezing:
+        skip_freezed_successors: True
+        type: 'iterative'
+        module_0: 150
+        module_1: 200
+        module_2: 350
+        module_3: 500
+        module_4: 750
