@@ -88,6 +88,7 @@ class CPCModule(nn.Module):
             c     = ct[:, k:, :]
 
             if self.config.train.neg_samples >= x.size(0):
+                # referring to comment in CPC_true_NCE in the same place
                 print('[WARN] positive samples occured in NCE loss')
 
             # create n negative samples for every timestep over the batch

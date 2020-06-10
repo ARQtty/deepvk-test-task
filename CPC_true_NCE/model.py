@@ -10,6 +10,7 @@ class CPCModel_NCE(nn.Module):
     def __init__(self, config):
         super(CPCModel_NCE, self).__init__()
         self.device = config.train.device
+        self.config = config
         strides = [5, 4, 2, 2, 2]
         kernels = [10,8, 4, 4, 4]
         padding = [2, 2, 2, 2, 1]
@@ -23,23 +24,23 @@ class CPCModel_NCE(nn.Module):
             dim = config.model.conv_channels
             if i == 0:
                 dim = 1
-            self.convolutions.append(nn.Conv1d(dim, 
-                                               channels, 
-                                               kernels[i], 
-                                               strides[i], 
+            self.convolutions.append(nn.Conv1d(dim,
+                                               channels,
+                                               kernels[i],
+                                               strides[i],
                                                padding[i]))
             self.convolutions.append(nn.ReLU())
             self.convolutions.append(nn.BatchNorm1d(channels))
-        self.convolutions = nn.Sequential(*self.convolutions)    
-        
-        self.autoregressor = nn.GRU(channels, 
-                                    config.model.context_size, 
+        self.convolutions = nn.Sequential(*self.convolutions)
+
+        self.autoregressor = nn.GRU(channels,
+                                    config.model.context_size,
                                     batch_first=True)
         
         self.coupling_transforms = torch.nn.ModuleList([
             torch.nn.Sequential(
                 torch.nn.Linear(
-                    channels, channels)
+                    config.model.context_size, channels)
             )
             for steps in range(self.predict_steps)
         ])
@@ -103,40 +104,39 @@ class CPCModel_NCE(nn.Module):
             # select z_k+t for a whole t
             z_pos = z[:, k:, :]
             z_neg = z_negative[:, k:, :]
-            
+            c     = ct[:, k:, :]
+
             # create negatives for every step
             if self.neg_samples >= x.size(0):
-                # since the negative samples made by shifting audio representations over the batch axis (and 
-                # randomly permutated over columns (get_z_neg)), round shifting of batch axis more then 
+                # since the negative samples made by shifting audio representations over the batch axis (and
+                # randomly permutated over columns (get_z_neg)), round shifting of batch axis more then
                 # %batch_size% times leads to repeating of negative samples, and i-th audio repr will become
                 # a source of negative samples to i-th audio.
                 # The paper allows negative sampling from current audio, but it will be disturb the convergence
                 print('[WARN] positive samples occured in NCE loss')
-                
+
             # create n negative samples for every timestep over the batch
-            z_neg_full = z_neg.unsqueeze(1) # b x l x 1 x c 
+            z_neg_full = z_neg.unsqueeze(1) # b x l x 1 x c
             for i in range(1, self.neg_samples):
                 z_neg = self._shift_z_rows(z_neg)
                 z_neg_full = torch.cat((z_neg_full, z_neg.unsqueeze(1)), dim=1)
-            
+
             # estimate probabilities of z with filter (unique for each step, as mentioned in paper)
-            estimated_pos = transform(z_pos).squeeze(0).unsqueeze(1) # b x 1 x l x c
-            estimated_neg = transform(z_neg_full).squeeze(0)         # b x n x l x c
-            
-            # concatinate pos and neg estimated samples 
-            estimated = torch.cat((estimated_pos, estimated_neg), dim=1) # b x n+1 x l x c
-            b, s, l, c = estimated.size()
-            estimated = estimated.reshape(b*s*l, c)
-           
+            estimated_c = transform(c).unsqueeze(1)    # b x 1 x l x c
+            b, _, l, c = estimated_c.size()
+            estimated_c = estimated_c.expand(b, self.config.train.neg_samples+1, l, c) # b x n+1 x l x c
+
             z_full = torch.cat((z_pos.unsqueeze(1), z_neg_full), dim=1) # b x n+1 x l x c
             
             # flatten
             b, s, l, c = z_full.size()
             z_full = z_full.reshape(b*l*s, c)
             
+            b, s, l, c = estimated_c.size()
+            estimated_c = estimated_c.reshape(b*s*l, c)
             # tensor magic of reducing dimensions
             z_full = z_full.unsqueeze(2)
-            estimated = estimated.unsqueeze(1)
+            estimated = estimated_c.unsqueeze(1)
             f_k = torch.matmul(estimated, z_full).squeeze(1) # b*l*(n+1) x 1
             
             # forget about softmax *
@@ -148,9 +148,10 @@ class CPCModel_NCE(nn.Module):
             
             f_k = f_k.reshape(b*l*(self.neg_samples+1), 1)
             
-            # create labels vector and flatting it 
+
+            # create labels vector and flatting it
             answers_pos = torch.ones(b, 1, l, 1)
-            answers_neg = torch.zeros_like(answers_pos).expand(b, self.neg_samples, l, 1)            
+            answers_neg = torch.zeros_like(answers_pos).expand(b, self.neg_samples, l, 1)
             answers = torch.cat((answers_pos, answers_neg), dim=1)
             answers = answers.reshape(b*(self.neg_samples+1)*l, 1) # b*l*(n+1) x 1
             
