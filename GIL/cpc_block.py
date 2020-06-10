@@ -28,7 +28,7 @@ class CPCModule(nn.Module):
 
         self.transforms = nn.ModuleList([
                                         nn.Sequential(
-                                            nn.Linear(conv_dim_out, config.model.conv_channels))
+                                            nn.Linear(config.model.context_size, config.model.conv_channels))
                                         for k in range(config.model.predict_steps)])
         self.predicting_steps = config.model.predict_steps
         self.loss = nn.LogSoftmax(dim=1)
@@ -83,10 +83,9 @@ class CPCModule(nn.Module):
 
         losses = []
         for k, transform in enumerate(self.transforms, start=1):
-            #             print('  transform %d---'%k)
             z_pos = z[:, k:, :]
             z_neg = z_negative[:, k:, :]
-            #print('    z pos' , z_pos.size(), 'z neg', z_neg.size())
+            c     = ct[:, k:, :]
 
             if self.config.train.neg_samples >= x.size(0):
                 print('[WARN] positive samples occured in NCE loss')
@@ -97,24 +96,23 @@ class CPCModule(nn.Module):
                 z_neg = self._shift_z_rows(z_neg)
                 z_neg_full = torch.cat((z_neg_full, z_neg.unsqueeze(1)), dim=1)
 
-
-            estimated_pos = transform(z_pos).squeeze(0).unsqueeze(1) # b x 1 x l x c
-            estimated_neg = transform(z_neg_full).squeeze(0)         # b x n x l x c
-
-            # concatinate pos and neg estimated samples
-            estimated = torch.cat((estimated_pos, estimated_neg), dim=1) # b x n+1 x l x c
-            b, s, l, c = estimated.size()
-            estimated = estimated.reshape(b*s*l, c)
+            # estimating c_t (for z_t+k)
+            estimated_c = transform(c).unsqueeze(1) # b x 1 x l x c
+            b, _, l, c = estimated_c.size()
+            estimated_c = estimated_c.expand(b, self.config.train.neg_samples+1, l, c) # b x n+1 x l x c
 
             z_full = torch.cat((z_pos.unsqueeze(1), z_neg_full), dim=1) # b x n+1 x l x c
 
             # flatten
             b, s, l, c = z_full.size()
             z_full = z_full.reshape(b*l*s, c)
+            b, s, l, c = estimated_c.size()
+            estimated_c = estimated_c.reshape(b*s*l, c)
 
             # tensor magic of reducing dimensions
             z_full = z_full.unsqueeze(2)
-            estimated = estimated.unsqueeze(1)
+            estimated = estimated_c.unsqueeze(1)
+            #continue
             f_k = torch.matmul(estimated, z_full).squeeze(1) # b*l*(n+1) x 1
 
             # forget about softmax *
