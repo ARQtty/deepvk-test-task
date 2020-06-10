@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
 
     print('Creating model')
-    model = GILModel(config).to(config.train.device)
+    model = GILModel(config, writer).to(config.train.device)
 
     if config.train.unfreezing.type == 'iterative':
         freezer = IterativeFreezer(config, model)

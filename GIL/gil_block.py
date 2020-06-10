@@ -45,7 +45,7 @@ class GILModule(nn.Module):
         #     modifier = self.gradient_modifier
 
         with self.gradient_modifier():
-            z = self.cpc_module(x)
+            z, losses = self.cpc_module(x)
             z = self.grad_block(z)
 
-        return z
+        return z, losses

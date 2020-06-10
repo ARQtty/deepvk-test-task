@@ -14,10 +14,14 @@ padding = [2, 2, 2, 2, 1]
 
 
 class GILModel(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, writer):
         super(GILModel, self).__init__()
         self.config = config
         assert config.train.n_blocks == len(strides) # stupid way to check if we forget to change it
+
+        self.writer = writer
+        self.train_upd_step = 0
+        self.test_upd_step = 0
 
         self.gim_modules = nn.ModuleList()
         for i in range(config.train.n_blocks):
@@ -46,7 +50,19 @@ class GILModel(nn.Module):
     def forward(self, x):
         z = x
         for i, module in enumerate(self.gim_modules):
-            z = module(z)
+            z, losses = module(z)
+
+            # write train logs
+            if self.training:
+                train_test = 'Train'
+                step = self.train_upd_step
+                self.train_upd_step += 1
+            else:
+                train_test = 'Test'
+                step = self.test_upd_step
+                self.test_upd_step += 1
+            avg_loss = sum(losses) / max(1, len(losses))
+            self.writer.add_scalar('%s_loss/module_%d_loss' % (train_test, i), avg_loss, step)
 
             # check if all next modules are freezed, flag "skip successors"
             # in config is true and we are in training, we can skip

@@ -128,4 +128,4 @@ class CPCModule(nn.Module):
                 self.opt.step()
             self.opt.zero_grad()
 
-        return z.permute(0, 2, 1)
+        return z.permute(0, 2, 1), [loss.item() for loss in losses]
