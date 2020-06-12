@@ -43,7 +43,10 @@ if __name__ == "__main__":
     abs_step_train = 0
     abs_step_test = 0
     
-
+    
+    if config.train.start_epoch != 1:
+        model.load_state_dict(torch.load(config.train.start_checkpoint, device=config.train.device))
+    
     print('Training model')
     for e in range(1, config.train.epochs):
         print('[%s] Epoch %2d started' % (gettime(), e))

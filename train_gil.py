@@ -49,7 +49,9 @@ if __name__ == "__main__":
         # modules are unfreezed since initialization
         for i in range(1, 5):
             model.freeze_block(i)
-
+    
+    if config.train.start_epoch != 1:
+        model.load_state_dict(torch.load(config.train.start_checkpoint, device=config.train.device))
 
     print('Training model')
     for e in range(config.train.start_epoch, config.train.epochs):

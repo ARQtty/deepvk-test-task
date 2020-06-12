@@ -9,7 +9,8 @@ model:
 
 
 train:
-    start_epoch: 1
+    start_epoch: 13
+    start_checkpoint: 'grad_isolated_model_12_epoch.pt'
     test_size: 0.2
     lr: 0.0002
     batch_size: 2
