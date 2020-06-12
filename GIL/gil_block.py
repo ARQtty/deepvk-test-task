@@ -43,9 +43,13 @@ class GILModule(nn.Module):
         #     modifier = no_grad
         # else:
         #     modifier = self.gradient_modifier
-
         with self.gradient_modifier():
             z, losses = self.cpc_module(x)
             z = self.grad_block(z)
 
         return z, losses
+
+
+    def predict(self, z):
+        z, ct, state_ct = self.cpc_module.predict(z)
+        return z, ct, state_ct

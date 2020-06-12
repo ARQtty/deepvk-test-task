@@ -24,7 +24,7 @@ class CPCModule(nn.Module):
         self.config = config
 
         self.encoder = encoder_fabric(conv_dim_in, conv_dim_out, kernel, stride, padding)
-        self.autoregressor = nn.GRU(config.model.conv_channels, config.model.context_size)
+        self.autoregressor = nn.GRU(config.model.conv_channels, config.model.context_size, batch_first=True)
 
         self.transforms = nn.ModuleList([
                                         nn.Sequential(
@@ -130,3 +130,14 @@ class CPCModule(nn.Module):
             self.opt.zero_grad()
 
         return z.permute(0, 2, 1), [loss.item() for loss in losses]
+
+
+    def predict(self, z):
+        z = self.encoder(z)
+        z = z.permute(0, 2, 1)
+        #         print('  z size', z.size())
+        z_negative = self._get_z_neg(z)
+
+        ct, state = self.autoregressor(z)
+
+        return z.permute(0, 2, 1), ct, state

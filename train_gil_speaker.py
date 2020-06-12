@@ -11,11 +11,11 @@ from sklearn.model_selection import train_test_split
 
 from hparams import Hparam
 from data.dataset import SpeechDataset
-from CPC_true_NCE.model import CPCModel_NCE
+from GIL.model import GILModel
 from CPC_classifiers.speaker_model import SpeakerClassificationModel
 
 
-config = Hparam('./CPC_classifiers/config.yaml')
+config = Hparam('./CPC_classifiers/config_gil.yaml')
 gettime = lambda: str(dt.time(dt.now()))[:8]
 if not os.path.isdir('./checkpoints'):
     os.mkdir('./checkpoints')
@@ -43,14 +43,14 @@ if __name__ == "__main__":
     test_step =  0
 
     print('Creating model')
-    model_cpc = CPCModel_NCE(Hparam(config.model.cpc_config_path)).to(config.train.device)
+    model_cpc = GILModel(Hparam(config.model.cpc_config_path), None).to(config.train.device)
     model = SpeakerClassificationModel(model_cpc,
                                      config.model.hidden_size,
                                      dataset.n_speakers,
                                      config.model.freeze_cpc_model).to(config.train.device)
     model.load_cpc_checkpoint(config.train.checkpoints_dir + '/' + config.train.cpc_checkpoint)
 
-    opt = torch.optim.Adadelta(model.parameters())#, lr=config.train.lr)
+    opt = torch.optim.Adam(model.parameters(), lr=config.train.lr)
     criterion = torch.nn.CrossEntropyLoss()
 
 

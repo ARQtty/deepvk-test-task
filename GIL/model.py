@@ -17,6 +17,8 @@ class GILModel(nn.Module):
     def __init__(self, config, writer):
         super(GILModel, self).__init__()
         self.config = config
+        self.device = config.train.device
+        self.context_size = config.model.context_size
         assert config.train.n_blocks == len(strides) # stupid way to check if we forget to change it
 
         self.writer = writer
@@ -75,6 +77,16 @@ class GILModel(nn.Module):
                 return z
 
         return z
+
+
+    def predict(self, x):
+        batch_size = x.size()[0]
+        z = x
+        with torch.no_grad():
+            for module in self.gim_modules:
+                z, ct, state_ct = module.predict(z)
+
+        return ct, state_ct
 
 
     def get_summary(self, sample):
