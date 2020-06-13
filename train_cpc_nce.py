@@ -45,10 +45,10 @@ if __name__ == "__main__":
     
     
     if config.train.start_epoch != 1:
-        model.load_state_dict(torch.load(config.train.start_checkpoint, device=config.train.device))
+        model.load_state_dict(torch.load(config.train.checkpoints_dir + '/' + config.train.start_checkpoint, device=config.train.device))
     
     print('Training model')
-    for e in range(1, config.train.epochs):
+    for e in range(config.train.start_epoch, config.train.epochs):
         print('[%s] Epoch %2d started' % (gettime(), e))
 
         print('  [%s] Train' % gettime())

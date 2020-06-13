@@ -9,7 +9,11 @@ class SpeakerClassificationModel(nn.Module):
         super(SpeakerClassificationModel, self).__init__()
         self.cpc_model = cpc_model
         self.cpc_model.requires_grad_(not freeze_cpc)
-        
+        if freeze_cpc:
+            self.cpc_model.eval()
+        else:
+            self.cpc_model.train()
+
 #         self.linear = nn.Sequential(nn.Linear(self.cpc_model.context_size, hidden_size),
 #                                     nn.BatchNorm1d(hidden_size),
 #                                     nn.Tanh(),

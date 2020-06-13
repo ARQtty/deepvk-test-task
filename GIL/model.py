@@ -50,9 +50,9 @@ class GILModel(nn.Module):
 
 
     def forward(self, x):
-        z = x
+        ct = x
         for i, module in enumerate(self.gim_modules):
-            z, losses = module(z)
+            z, ct, ct_state, losses = module(ct)
 
             # write train logs
             if self.training:
@@ -74,17 +74,19 @@ class GILModel(nn.Module):
                 if not successor.is_freezed():
                     all_freezed = False
             if all_freezed and self.config.train.unfreezing.skip_freezed_successors:
-                return z
+                return ct
 
-        return z
+        return ct
 
 
     def predict(self, x):
         batch_size = x.size()[0]
         z = x
-        with torch.no_grad():
-            for module in self.gim_modules:
-                z, ct, state_ct = module.predict(z)
+
+        print('---------------------------')
+        for i, module in enumerate(self.gim_modules):
+            z, ct, state_ct = module.predict(z)
+            print('  module %d z' % i, z)
 
         return ct, state_ct
 

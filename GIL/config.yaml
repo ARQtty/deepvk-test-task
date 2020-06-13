@@ -4,7 +4,7 @@ data:
 
 model:
     predict_steps: 4
-    context_size: 256
+    context_size: 512
     conv_channels: 512
 
 

@@ -44,10 +44,10 @@ class GILModule(nn.Module):
         # else:
         #     modifier = self.gradient_modifier
         with self.gradient_modifier():
-            z, losses = self.cpc_module(x)
-            z = self.grad_block(z)
+            z, ct, ct_state, losses = self.cpc_module(x)
+            ct = self.grad_block(ct)
 
-        return z, losses
+        return z, ct, ct_state, losses
 
 
     def predict(self, z):

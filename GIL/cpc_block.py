@@ -79,7 +79,7 @@ class CPCModule(nn.Module):
         #         print('  z size', z.size())
         z_negative = self._get_z_neg(z)
 
-        ct, state = self.autoregressor(z)
+        ct, ct_state = self.autoregressor(z)
 
         losses = []
         for k, transform in enumerate(self.transforms, start=1):
@@ -120,16 +120,15 @@ class CPCModule(nn.Module):
             f_k = f_k.reshape(b*l, self.config.train.neg_samples+1)
             #print('    fk size', f_k.size())
 
-            loss = self.loss(f_k)
-            losses.append(-loss.sum() / ((l - k)*b))
+            loss = -self.loss(f_k).sum() / ((l - k)*b)
+            losses.append(loss.item())
 
-        if self.calculate_grads and self.training:
-            for loss in losses:
+            if self.calculate_grads and self.training:
                 loss.backward(retain_graph=True)
                 self.opt.step()
             self.opt.zero_grad()
 
-        return z.permute(0, 2, 1), [loss.item() for loss in losses]
+        return z.permute(0, 2, 1), ct.permute(0, 2, 1), ct_state losses
 
 
     def predict(self, z):
