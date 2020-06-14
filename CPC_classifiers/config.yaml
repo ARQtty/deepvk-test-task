@@ -18,5 +18,6 @@ train:
     checkpoints_dir: 'checkpoints'
     save_name: 'speaker_cpc_nce_classifier'
     device: 'cuda:0'
+    load_cpc_checkpoint: False
     cpc_checkpoint: 'cpc_model_35_epoch.pt'
     

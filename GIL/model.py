@@ -85,10 +85,8 @@ class GILModel(nn.Module):
         batch_size = x.size()[0]
         z = x
 
-        print('---------------------------')
         for i, module in enumerate(self.gim_modules):
             z, ct, state_ct = module.predict(z)
-            print('  module %d z' % i, z)
 
         return ct, state_ct
 

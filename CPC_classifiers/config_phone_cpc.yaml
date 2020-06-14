@@ -18,4 +18,5 @@ train:
     save_name: 'phone_cpc_nce_classifier'
     checkpoints_dir: 'cluster_checkpoints'
     device: 'cuda:0'
+    load_cpc_checkpoint: False
     cpc_checkpoint: 'cpc_nce_model_ctz_15_epoch.pt'

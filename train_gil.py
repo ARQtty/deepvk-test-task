@@ -10,7 +10,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from tensorboardX import SummaryWriter
 
 from hparams import Hparam
-from data.dataset import SpeechDataset
+from data.dataset import AudioDataset
 from GIL.model import GILModel
 from GIL.freezers import SimultaneousFreezer, IterativeFreezer
 
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     writer = SummaryWriter()
 
     print('Extracting data')
-    dataset = SpeechDataset(config.data.path)
+    dataset = AudioDataset(config.data.path)
     train_ixs, test_ixs =  dataset.train_test_split_ixs(config.train.test_size)
     train_sampler = SubsetRandomSampler(train_ixs)
     test_sampler = SubsetRandomSampler(test_ixs)
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         # modules are unfreezed since initialization
         for i in range(1, 5):
             model.freeze_block(i)
-    
+
     if config.train.start_epoch != 1:
         model.load_state_dict(torch.load(config.train.start_checkpoint, device=config.train.device))
 
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         model.train()
         for i, batch in tqdm(enumerate(train_dataloader, start=1)):
 
-            speakers, utters = batch
+            utters = batch
             model(utters.unsqueeze(1).to(config.train.device))
 
             updates += 1
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         model.eval()
         for i, batch in tqdm(enumerate(test_dataloader, start=1)):
             with torch.no_grad():
-                speakers, utters = batch
+                utters = batch
                 model(utters.unsqueeze(1).to(config.train.device))
 
 

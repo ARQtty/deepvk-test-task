@@ -10,7 +10,7 @@ from tensorboardX import SummaryWriter
 from sklearn.model_selection import train_test_split
 
 from hparams import Hparam
-from data.dataset import SpeechDataset
+from data.dataset import SpeakersDataset
 from CPC_true_NCE.model import CPCModel_NCE
 from CPC_classifiers.speaker_model import SpeakerClassificationModel
 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
 
     print('Extracting data')
-    dataset = SpeechDataset(config.data.path)
+    dataset = SpeakersDataset(config.data.path)
     train_dataset, test_dataset = train_test_split(dataset, test_size=config.train.test_split)
 
     batch_size = config.train.batch_size
@@ -48,7 +48,8 @@ if __name__ == "__main__":
                                      config.model.hidden_size,
                                      dataset.n_speakers,
                                      config.model.freeze_cpc_model).to(config.train.device)
-    model.load_cpc_checkpoint(config.train.checkpoints_dir + '/' + config.train.cpc_checkpoint)
+    if config.train.load_cpc_checkpoint:
+        model.load_cpc_checkpoint(config.train.checkpoints_dir + '/' + config.train.cpc_checkpoint)
 
     opt = torch.optim.Adadelta(model.parameters())#, lr=config.train.lr)
     criterion = torch.nn.CrossEntropyLoss()
@@ -68,6 +69,7 @@ if __name__ == "__main__":
             logits = model(utters.unsqueeze(1).to(config.train.device))
             logits = logits.squeeze(0)
             loss = criterion(logits, speakers)
+
 
             loss.backward()
             opt.step()

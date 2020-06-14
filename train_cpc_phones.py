@@ -48,7 +48,8 @@ if __name__ == "__main__":
                                      config.model.hidden_size,
                                      dataset.n_phones,
                                      config.model.freeze_cpc_model).to(config.train.device)
-    model.load_cpc_checkpoint(config.train.checkpoints_dir + '/' + config.train.cpc_checkpoint)
+    if config.train.load_cpc_checkpoint:
+        model.load_cpc_checkpoint(config.train.checkpoints_dir + '/' + config.train.cpc_checkpoint)
 
     opt = torch.optim.Adadelta(model.parameters())#, lr=config.train.lr)
     criterion = torch.nn.CrossEntropyLoss()

@@ -23,7 +23,7 @@ class SpeakerClassificationModel(nn.Module):
 
 
     def forward(self, x):
-        _, ct_state = self.cpc_model(x)
+        _, ct_state = self.cpc_model.predict(x)
         ct_state = ct_state.squeeze()
         pred = self.linear(ct_state.squeeze(0))
 

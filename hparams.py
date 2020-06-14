@@ -1,6 +1,6 @@
 import yaml
 
-def load_hparam(filename):
+def _load_hparam(filename):
     stream = open(filename, 'r')
     docs = yaml.load_all(stream, Loader=yaml.SafeLoader)
     hparam_dict = dict()
@@ -11,9 +11,6 @@ def load_hparam(filename):
 
 
 class Dotdict(dict):
-    """
-    dict with dot access
-    """
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
@@ -28,10 +25,13 @@ class Dotdict(dict):
 
             
 class Hparam(Dotdict):
-
+    """
+    Dictionary that provides .dot access to its fields, I prefer it
+    nether [][][][][][][][]
+    """
     def __init__(self, file):
         super(Dotdict, self).__init__()
-        hp_dict = load_hparam(file)
+        hp_dict = _load_hparam(file)
         hp_dotdict = Dotdict(hp_dict)
         for k, v in hp_dotdict.items():
             setattr(self, k, v)

@@ -10,7 +10,7 @@ from tensorboardX import SummaryWriter
 from sklearn.model_selection import train_test_split
 
 from hparams import Hparam
-from data.dataset import SpeechDataset
+from data.dataset import SpeakersDataset
 from GIL.model import GILModel
 from CPC_classifiers.speaker_model import SpeakerClassificationModel
 from GIL.freezers import SimultaneousFreezer, IterativeFreezer
@@ -28,7 +28,7 @@ if __name__ == "__main__":
 
 
     print('Extracting data')
-    dataset = SpeechDataset(config.data.path)
+    dataset = SpeakersDataset(config.data.path)
     train_dataset, test_dataset = train_test_split(dataset, test_size=config.train.test_split)
 
     batch_size = config.train.batch_size
