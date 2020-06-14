@@ -4,7 +4,7 @@ data:
     waveform_len: 20480
 
 model:
-    cpc_config_path: 'CPC_true_NCE/config.yaml'
+    cpc_config_path: 'CPC_model/config.yaml'
     hidden_size: 256
     freeze_cpc_model: False
 

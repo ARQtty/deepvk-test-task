@@ -3,21 +3,18 @@ data:
     waveform_len: 20480
 
 model:
-    cpc_config_path: 'CPC_true_NCE/config.yaml'
+    cpc_config_path: 'GIL_model/config.yaml'
     hidden_size: 256
     freeze_cpc_model: True
 
-
 train:
-    lr: 0.0002
+    lr: 0.01
     epochs: 100
     save_every: 10
     test_split: 0.1
-    batch_size: 64
+    batch_size: 23
     shuffle_data: True
-    checkpoints_dir: 'checkpoints'
-    save_name: 'speaker_cpc_nce_classifier'
+    save_name: 'speaker_grad_isolated_model'
+    checkpoints_dir: 'cluster_checkpoints'
     device: 'cuda:0'
-    load_cpc_checkpoint: False
-    cpc_checkpoint: 'cpc_model_35_epoch.pt'
-    
+    cpc_checkpoint: 'grad_isolated_model_12_epoch.pt'

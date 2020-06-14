@@ -1,117 +1,11 @@
 import numpy as np
 import os
-from tqdm import tqdm
 import torch
 import torchaudio
 import tgt #textgrid parser
 
-
-
-class CPCAudioPredicates:
-    '''
-    Papers based on CPC model requires some audio parameter limits. Its
-    limits implemented here as predicates for filtering audio dataset items
-    '''
-    @staticmethod
-    def longer_then_sample_length(path):
-        '''
-        Returns True if audio is longer then 1.28sec that is required for
-        CPC models from papers
-        '''
-        filesize = os.path.getsize(path)
-
-        # we should check if audio is longer then 1,28sec
-        # it's about 40kB
-
-        # sampling rate is always 16k in the LibriSpeech dataset, so if
-        # file is larger then 50kB, it is defenetly longer then 1.28sec
-        if filesize > 50000:
-            return True
-
-        # else we check file length
-        audio, bitrate = torchaudio.load(path)
-        return audio.size(1) > 20480
-
-
-
-class LibriSpeechBaseDataset(torch.utils.data.Dataset):
-    '''
-    Base dataset object provides vectorized functions for manipulating its audio files
-    '''
-    def __init__(self, root):
-        self.root = root
-        self.pathes = self._get_files_pathes()
-
-
-    def _get_files_pathes(self):
-        '''Fetches all audio files pathes of dataset'''
-        pathes = []
-
-        # Walk over the dataset
-        for path, dirs, files in os.walk(self.root):
-            speaker = '/'.join(path.split('/')[-2:])
-            # select only sound files
-            files = list(filter(lambda s: s.endswith('.flac'), files))
-            if len(files) > 0:
-                pathes += list(map(lambda s: '/%s/%s' % (speaker, s), files))
-
-        pathes = list(filter(lambda s: s is not None, pathes))
-        return pathes
-
-
-    def filter_dataset_items(self, predicate):
-        '''
-        Applies given predicate to every dataset item (file path)
-        and filtering not suitable items by that predicate
-        Returns filtred dataset items
-        '''
-        for i, path in enumerate(self.pathes):
-            suitable = predicate(self.root + path)
-            if not suitable:
-                self.pathes[i] = None
-
-        pathes = list(filter(lambda p: p is not None, self.pathes))
-        return pathes
-
-
-    def map_dataset_items(self, predicate):
-        result = []
-        for i, path in enumerate(self.pathes):
-            item = predicate(path)
-            result.append(item)
-
-        return result
-
-
-    def map_onehot(self, categories):
-        return {cat: i for i, cat in enumerate(sorted(categories))}
-
-
-    def train_test_split_ixs(self, test_size):
-        '''
-        Returns two lists of randomly shuffled indexes: for train and test part
-
-        Used cause of sklearn train_test_split forces dataset items to be loaded
-        into memory as <list>. It costs too much for audio dataset
-        '''
-        split_ix = int(len(self) * (1-test_size))
-
-        ixs = torch.tensor(list(range(len(self))))
-        ixs = ixs[torch.randperm(len(ixs))]
-
-        train_ixs = ixs[:split_ix]
-        test_ixs = ixs[split_ix:]
-
-        return train_ixs, test_ixs
-
-
-    def __len__(self):
-        return len(self.pathes)
-
-
-    def __getitem__(self, ix):
-        raise NotImplementedError
-
+from .base_dataset import LibriSpeechBaseDataset
+from .predicates import CPCAudioPredicates
 
 
 class AudioDataset(LibriSpeechBaseDataset):
@@ -176,7 +70,7 @@ class PhonesDataset(LibriSpeechBaseDataset):
         get_textgrid_path = lambda p: p[:-len('flac')] + 'TextGrid'
         textgrid_path = get_textgrid_path(path)
 
-        textgrid = tgt.read_textgrid(textgrid_path)
+        textgrid = tgt.read_textgrid(self.root + textgrid_path)
         tg_len = textgrid.end_time - textgrid.start_time
         labels = [0 for x in range(int(tg_len * 100))]
 

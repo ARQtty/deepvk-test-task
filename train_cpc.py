@@ -10,11 +10,11 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from tensorboardX import SummaryWriter
 
 from hparams import Hparam
-from data.dataset import AudioDataset
-from CPC_true_NCE.model import CPCModel_NCE
+from data.datasets import AudioDataset
+from CPC_model.model import CPCModel_NCE
 
 
-config = Hparam('./CPC_true_NCE/config.yaml')
+config = Hparam('./CPC_model/config.yaml')
 gettime = lambda: str(dt.time(dt.now()))[:8]
 if not os.path.isdir('./checkpoints'):
     os.mkdir('./checkpoints')
@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
 
     if config.train.start_epoch != 1:
-        model.load_state_dict(torch.load(config.train.checkpoints_dir + '/' + config.train.start_checkpoint, device=config.train.device))
+        model.load_state_dict(torch.load(config.train.checkpoints_dir + '/' + config.train.start_checkpoint, map_location=config.train.device))
 
     print('Training model')
     for e in range(config.train.start_epoch, config.train.epochs):

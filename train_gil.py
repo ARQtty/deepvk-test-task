@@ -10,12 +10,12 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from tensorboardX import SummaryWriter
 
 from hparams import Hparam
-from data.dataset import AudioDataset
-from GIL.model import GILModel
-from GIL.freezers import SimultaneousFreezer, IterativeFreezer
+from data.datasets import AudioDataset
+from GIL_model.model import GILModel
+from GIL_model.freezers import SimultaneousFreezer, IterativeFreezer
 
 
-config = Hparam('./GIL/config.yaml')
+config = Hparam('./GIL_model/config.yaml')
 gettime = lambda: str(dt.time(dt.now()))[:8]
 if not os.path.isdir('./checkpoints'):
     os.mkdir('./checkpoints')
@@ -51,7 +51,7 @@ if __name__ == "__main__":
             model.freeze_block(i)
 
     if config.train.start_epoch != 1:
-        model.load_state_dict(torch.load(config.train.start_checkpoint, device=config.train.device))
+        model.load_state_dict(torch.load(config.train.checkpoints_dir + '/' + config.train.start_checkpoint, map_location=config.train.device))
 
     print('Training model')
     for e in range(config.train.start_epoch, config.train.epochs):

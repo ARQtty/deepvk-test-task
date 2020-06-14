@@ -10,13 +10,13 @@ from tensorboardX import SummaryWriter
 from sklearn.model_selection import train_test_split
 
 from hparams import Hparam
-from data.dataset import SpeakersDataset
-from GIL.model import GILModel
-from CPC_classifiers.speaker_model import SpeakerClassificationModel
-from GIL.freezers import SimultaneousFreezer, IterativeFreezer
+from data.datasets import SpeakersDataset
+from GIL_model.model import GILModel
+from classifier_models.speaker_model import SpeakerClassificationModel
+from GIL_model.freezers import SimultaneousFreezer, IterativeFreezer
 
 
-config = Hparam('./CPC_classifiers/config_gil.yaml')
+config = Hparam('./classifier_models/config_gil.yaml')
 gettime = lambda: str(dt.time(dt.now()))[:8]
 if not os.path.isdir('./checkpoints'):
     os.mkdir('./checkpoints')

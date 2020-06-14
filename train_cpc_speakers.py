@@ -10,12 +10,12 @@ from tensorboardX import SummaryWriter
 from sklearn.model_selection import train_test_split
 
 from hparams import Hparam
-from data.dataset import SpeakersDataset
-from CPC_true_NCE.model import CPCModel_NCE
-from CPC_classifiers.speaker_model import SpeakerClassificationModel
+from data.datasets import SpeakersDataset
+from CPC_model.model import CPCModel_NCE
+from classifier_models.speaker_model import SpeakerClassificationModel
 
 
-config = Hparam('./CPC_classifiers/config.yaml')
+config = Hparam('./classifier_models/config.yaml')
 gettime = lambda: str(dt.time(dt.now()))[:8]
 if not os.path.isdir('./checkpoints'):
     os.mkdir('./checkpoints')

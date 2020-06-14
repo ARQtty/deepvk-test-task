@@ -10,12 +10,12 @@ from tensorboardX import SummaryWriter
 from sklearn.model_selection import train_test_split
 
 from hparams import Hparam
-from data.dataset import PhonesDataset
-from CPC_true_NCE.model import CPCModel_NCE
-from CPC_classifiers.phone_model import PhonesClassificationModel
+from data.datasets import PhonesDataset
+from CPC_model.model import CPCModel_NCE
+from classifier_models.phone_model import PhonesClassificationModel
 
 
-config = Hparam('./CPC_classifiers/config_phone_cpc.yaml')
+config = Hparam('./classifier_models/config_phone_cpc.yaml')
 gettime = lambda: str(dt.time(dt.now()))[:8]
 if not os.path.isdir('./checkpoints'):
     os.mkdir('./checkpoints')
@@ -24,7 +24,6 @@ if not os.path.isdir('./checkpoints'):
 
 if __name__ == "__main__":
     writer = SummaryWriter()
-
 
     print('Extracting data')
     dataset = PhonesDataset(config.data.path, config.data.lexicon)
