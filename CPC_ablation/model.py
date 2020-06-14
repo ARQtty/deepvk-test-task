@@ -8,6 +8,7 @@ from torchsummaryX import summary
 class CPCModel(nn.Module):
     '''
     CPC model without neg sampling and with different (compare to orig) loss
+    ref my pure implementation in CPC_model for detailed comments
     '''
     def __init__(self, config):
         super(CPCModel, self).__init__()

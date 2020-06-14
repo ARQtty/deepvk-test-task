@@ -1,20 +1,17 @@
+class BaseFreezer:
+    def maybe_freeze(self, step):
+        raise NotImplementedError
 
-class SimultaneousFreezer:
+
+
+class IterativeFreezer(BaseFreezer):
+    '''Freezer that allows gradient decent optimizing in only one module'''
     def __init__(self, config, model):
         self.config = config
         self.model = model
 
     def maybe_freeze(self, step):
-        pass
-
-
-
-class IterativeFreezer:
-    def __init__(self, config, model):
-        self.config = config
-        self.model = model
-
-    def maybe_freeze(self, step):
+        '''Depends on the step of training can freeze or unfreeze modules'''
         for ix in range(5):
             key = 'module_%d' % ix
 
@@ -29,3 +26,14 @@ class IterativeFreezer:
 
                 # report
                 print(' [Freezer] Module %d unfreezed' % ix)
+
+
+
+class SimultaneousFreezer(BaseFreezer):
+    '''Empty freezer, all modules will learn together with it'''
+    def __init__(self, config, model):
+        self.config = config
+        self.model = model
+
+    def maybe_freeze(self, step):
+        pass

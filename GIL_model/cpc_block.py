@@ -23,6 +23,7 @@ class CPCModule(nn.Module):
         self.calculate_grads = True
         self.config = config
 
+        # Creates 1-layer CPC model
         self.encoder = encoder_fabric(conv_dim_in, conv_dim_out, kernel, stride, padding)
         self.autoregressor = nn.GRU(config.model.conv_channels, config.model.context_size, batch_first=True)
 
@@ -33,18 +34,22 @@ class CPCModule(nn.Module):
         self.predicting_steps = config.model.predict_steps
         self.loss = nn.LogSoftmax(dim=1)
 
+        # Since the modules trains independently, it needs individual optimizer
         self.opt = torch.optim.Adam(self.parameters(), lr=config.train.lr)
 
 
     def set_grad_calc(self, val):
+        '''Bool flag defines calculate gradients in module or not'''
         assert isinstance(val, bool)
         self.calculate_grads = val
+
 
     def is_freezed(self):
         return not self.calculate_grads
 
 
     def _shift_z_rows(self, z):
+        # As in my implementation of pure CPC
         # z    b x l x c
         z = z.detach()
 
@@ -59,6 +64,7 @@ class CPCModule(nn.Module):
 
 
     def _get_z_neg(self, z):
+        # As in my implementation of pure CPC
         # creates noise copy of z by smartly shuffling data
         # z   b x l x c
 
@@ -74,12 +80,13 @@ class CPCModule(nn.Module):
 
 
     def forward(self, x):
+        # Does one pass of CPC layer and greedily optimize it
+
         z = self.encoder(x)
         z = z.permute(0, 2, 1)
-        #         print('  z size', z.size())
-        z_negative = self._get_z_neg(z)
-
         ct, ct_state = self.autoregressor(z)
+
+        z_negative = self._get_z_neg(z)
 
         losses = []
         for k, transform in enumerate(self.transforms, start=1):

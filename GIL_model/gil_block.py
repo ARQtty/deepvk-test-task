@@ -8,6 +8,7 @@ from .grad_modifiers import no_grad, EmptyModifier
 
 
 class GradBlock(nn.Module):
+    '''Cuts gradient tape of previous model'''
     def __init__(self):
         super(GradBlock, self).__init__()
 
@@ -18,6 +19,7 @@ class GradBlock(nn.Module):
 
 
 class GILModule(nn.Module):
+    '''Gradient Isolated block that contains optimizable CPC layer and gradient blocker after it'''
     def __init__(self, conv_dim_in, conv_dim_out, kernel, stride, padding, config):
         super(GILModule, self).__init__()
 
@@ -27,12 +29,16 @@ class GILModule(nn.Module):
 
 
     def freeze(self):
+        # Blocks learning of current module
         self.gradient_modifier = no_grad
         self.cpc_module.set_grad_calc(False)
 
+
     def unfreeze(self):
+        # Resumes learning of current module
         self.gradient_modifier = EmptyModifier
         self.cpc_module.set_grad_calc(True)
+
 
     def is_freezed(self):
         return self.cpc_module.is_freezed()
