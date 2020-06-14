@@ -27,15 +27,13 @@ if __name__ == "__main__":
 
     print('Extracting data')
     dataset = PhonesDataset(config.data.path, config.data.lexicon)
-    train_dataset, test_dataset = train_test_split(dataset, test_size=config.train.test_split)
+    train_ixs, test_ixs =  dataset.train_test_split_ixs(config.train.test_split)
+    train_sampler = SubsetRandomSampler(train_ixs)
+    test_sampler = SubsetRandomSampler(test_ixs)
 
-    batch_size = config.train.batch_size
-    dataloader_fabric = lambda ds: DataLoader(ds,
-                                              batch_size=config.train.batch_size,
-                                              shuffle=config.train.shuffle_data,
-                                              drop_last=True)
-    train_dl = dataloader_fabric(train_dataset)
-    test_dl = dataloader_fabric(test_dataset)
+    dataloader_fabric = lambda ds, sampler: DataLoader(ds, config.train.batch_size, sampler=sampler, drop_last=True)
+    train_dl = dataloader_fabric(dataset, train_sampler)
+    test_dl = dataloader_fabric(dataset, test_sampler)
 
     writer = SummaryWriter()
     train_step = 0

@@ -11,13 +11,13 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 from hparams import Hparam
-from data.datasets import SpeakersDataset
+from data.datasets import PhonesDataset
 from GIL_model.model import GILModel
-from classifier_models.speaker_model import SpeakerClassificationModel
 from GIL_model.freezers import SimultaneousFreezer, IterativeFreezer
+from classifier_models.phone_model import PhonesClassificationModel
 
 
-config = Hparam('./classifier_models/config_gil.yaml')
+config = Hparam('./classifier_models/config_phone_gil.yaml')
 gettime = lambda: str(dt.time(dt.now()))[:8]
 if not os.path.isdir('./checkpoints'):
     os.mkdir('./checkpoints')
@@ -27,11 +27,9 @@ if not os.path.isdir('./checkpoints'):
 if __name__ == "__main__":
     writer = SummaryWriter()
 
-
     print('Extracting data')
-    dataset = SpeakersDataset(config.data.path)
-
-    train_ixs, test_ixs =  dataset.train_test_split_ixs(config.train.test_size)
+    dataset = PhonesDataset(config.data.path, config.data.lexicon)
+    train_ixs, test_ixs =  dataset.train_test_split_ixs(config.train.test_split)
     train_sampler = SubsetRandomSampler(train_ixs)
     test_sampler = SubsetRandomSampler(test_ixs)
 
@@ -56,13 +54,14 @@ if __name__ == "__main__":
         for i in range(1, 5):
             model_cpc.freeze_block(i)
 
-    model = SpeakerClassificationModel(model_cpc,
+    model = PhonesClassificationModel(model_cpc,
                                      config.model.hidden_size,
-                                     dataset.n_speakers,
+                                     dataset.n_phones,
                                      config.model.freeze_cpc_model).to(config.train.device)
-    #model.load_cpc_checkpoint(config.train.checkpoints_dir + '/' + config.train.cpc_checkpoint)
+    if config.train.load_cpc_checkpoint:
+        model.load_cpc_checkpoint(config.train.checkpoints_dir + '/' + config.train.cpc_checkpoint)
 
-    opt = torch.optim.Adam(model.parameters(), lr=config.train.lr)
+    opt = torch.optim.Adadelta(model.parameters())#, lr=config.train.lr)
     criterion = torch.nn.CrossEntropyLoss()
 
 
@@ -74,12 +73,12 @@ if __name__ == "__main__":
         for i, batch in enumerate(train_dl, start=1):
             opt.zero_grad()
 
-            speakers, utters = batch
+            labels, utters = batch
             #speakers = F.one_hot(speakers, num_classes=ds.n_speakers).to(config.train.device)
-            speakers = speakers.long().to(config.train.device)
+            labels = labels.long().view(-1).to(config.train.device)
             logits = model(utters.unsqueeze(1).to(config.train.device))
-            logits = logits.squeeze(0)
-            loss = criterion(logits, speakers)
+            logits = logits.view(-1, dataset.n_phones)
+            loss = criterion(logits, labels)
 
             loss.backward()
             opt.step()
@@ -88,7 +87,7 @@ if __name__ == "__main__":
             freezer.maybe_freeze(updates)
 
             writer.add_scalar('loss/train', loss.item(), train_step)
-            writer.add_scalar('accuracy/train', SpeakerClassificationModel.get_acc(logits, speakers).item(), train_step)
+            writer.add_scalar('accuracy/train', PhonesClassificationModel.get_acc(logits, labels).item(), train_step)
 
             train_step += 1
 
@@ -96,14 +95,15 @@ if __name__ == "__main__":
         print('  [%s] Test' % gettime())
         for i, batch in enumerate(test_dl):
             with torch.no_grad():
-                speakers, utters = batch
-                speakers = speakers.long().to(config.train.device)
+                labels, utters = batch
+                #speakers = F.one_hot(speakers, num_classes=ds.n_speakers).to(config.train.device)
+                labels = labels.long().view(-1).to(config.train.device)
                 logits = model(utters.unsqueeze(1).to(config.train.device))
-                logits = logits.squeeze(0)
-                loss = criterion(logits, speakers)
+                logits = logits.view(-1, dataset.n_phones)
+                loss = criterion(logits, labels)
 
                 writer.add_scalar('loss/test', loss.item(), test_step)
-                writer.add_scalar('accuracy/test', SpeakerClassificationModel.get_acc(logits, speakers).item(), test_step)
+                writer.add_scalar('accuracy/test', PhonesClassificationModel.get_acc(logits, labels).item(), test_step)
 
                 test_step += 1
 
