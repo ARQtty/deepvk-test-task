@@ -128,7 +128,7 @@ class CPCModule(nn.Module):
                 self.opt.step()
             self.opt.zero_grad()
 
-        return z.permute(0, 2, 1), ct.permute(0, 2, 1), ct_state losses
+        return z.permute(0, 2, 1), ct.permute(0, 2, 1), ct_state, losses
 
 
     def predict(self, z):

@@ -10,13 +10,12 @@ from tensorboardX import SummaryWriter
 from sklearn.model_selection import train_test_split
 
 from hparams import Hparam
-from data.dataset import SpeechDataset
-from GIL.model import GILModel
-from CPC_classifiers.speaker_model import SpeakerClassificationModel
-from GIL.freezers import SimultaneousFreezer, IterativeFreezer
+from data.dataset import PhonesDataset
+from CPC_true_NCE.model import CPCModel_NCE
+from CPC_classifiers.phone_model import PhonesClassificationModel
 
 
-config = Hparam('./CPC_classifiers/config_gil.yaml')
+config = Hparam('./CPC_classifiers/config_phone_cpc.yaml')
 gettime = lambda: str(dt.time(dt.now()))[:8]
 if not os.path.isdir('./checkpoints'):
     os.mkdir('./checkpoints')
@@ -28,7 +27,7 @@ if __name__ == "__main__":
 
 
     print('Extracting data')
-    dataset = SpeechDataset(config.data.path)
+    dataset = PhonesDataset(config.data.path, config.data.lexicon)
     train_dataset, test_dataset = train_test_split(dataset, test_size=config.train.test_split)
 
     batch_size = config.train.batch_size
@@ -44,26 +43,14 @@ if __name__ == "__main__":
     test_step =  0
 
     print('Creating model')
-    gil_cfg = Hparam(config.model.cpc_config_path)
-    model_cpc = GILModel(gil_cfg, writer).to(config.train.device)
-    if gil_cfg.train.unfreezing.type == 'iterative':
-        freezer = IterativeFreezer(gil_cfg, model_cpc)
-    elif gil_cfg.train.unfreezing.type == 'simultaneous':
-        freezer = SimultaneousFreezer(gil_cfg, model_cpc)
-    updates = 0
-
-    if gil_cfg.train.unfreezing.type == 'iterative':
-        # modules are unfreezed since initialization
-        for i in range(1, 5):
-            model_cpc.freeze_block(i)
-
-    model = SpeakerClassificationModel(model_cpc,
+    model_cpc = CPCModel_NCE(Hparam(config.model.cpc_config_path)).to(config.train.device)
+    model = PhonesClassificationModel(model_cpc,
                                      config.model.hidden_size,
-                                     dataset.n_speakers,
+                                     dataset.n_phones,
                                      config.model.freeze_cpc_model).to(config.train.device)
-    #model.load_cpc_checkpoint(config.train.checkpoints_dir + '/' + config.train.cpc_checkpoint)
+    model.load_cpc_checkpoint(config.train.checkpoints_dir + '/' + config.train.cpc_checkpoint)
 
-    opt = torch.optim.Adam(model.parameters(), lr=config.train.lr)
+    opt = torch.optim.Adadelta(model.parameters())#, lr=config.train.lr)
     criterion = torch.nn.CrossEntropyLoss()
 
 
@@ -75,21 +62,18 @@ if __name__ == "__main__":
         for i, batch in enumerate(train_dl, start=1):
             opt.zero_grad()
 
-            speakers, utters = batch
+            labels, utters = batch
             #speakers = F.one_hot(speakers, num_classes=ds.n_speakers).to(config.train.device)
-            speakers = speakers.long().to(config.train.device)
+            labels = labels.long().view(-1).to(config.train.device)
             logits = model(utters.unsqueeze(1).to(config.train.device))
-            logits = logits.squeeze(0)
-            loss = criterion(logits, speakers)
+            logits = logits.view(-1, dataset.n_phones)
+            loss = criterion(logits, labels)
 
             loss.backward()
             opt.step()
 
-            updates += 1
-            freezer.maybe_freeze(updates)
-
             writer.add_scalar('loss/train', loss.item(), train_step)
-            writer.add_scalar('accuracy/train', SpeakerClassificationModel.get_acc(logits, speakers).item(), train_step)
+            writer.add_scalar('accuracy/train', PhonesClassificationModel.get_acc(logits, labels).item(), train_step)
 
             train_step += 1
 
@@ -97,14 +81,15 @@ if __name__ == "__main__":
         print('  [%s] Test' % gettime())
         for i, batch in enumerate(test_dl):
             with torch.no_grad():
-                speakers, utters = batch
-                speakers = speakers.long().to(config.train.device)
+                labels, utters = batch
+                #speakers = F.one_hot(speakers, num_classes=ds.n_speakers).to(config.train.device)
+                labels = labels.long().view(-1).to(config.train.device)
                 logits = model(utters.unsqueeze(1).to(config.train.device))
-                logits = logits.squeeze(0)
-                loss = criterion(logits, speakers)
+                logits = logits.view(-1, dataset.n_phones)
+                loss = criterion(logits, labels)
 
                 writer.add_scalar('loss/test', loss.item(), test_step)
-                writer.add_scalar('accuracy/test', SpeakerClassificationModel.get_acc(logits, speakers).item(), test_step)
+                writer.add_scalar('accuracy/test', PhonesClassificationModel.get_acc(logits, labels).item(), test_step)
 
                 test_step += 1
 

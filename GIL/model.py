@@ -73,10 +73,12 @@ class GILModel(nn.Module):
             for successor in self.gim_modules[i+1:]:
                 if not successor.is_freezed():
                     all_freezed = False
-            if all_freezed and self.config.train.unfreezing.skip_freezed_successors:
-                return ct
+            if all_freezed and \
+               self.config.train.unfreezing.skip_freezed_successors and \
+               self.config.train.unfreezing.type == 'iterative':
+                return ct, ct_state
 
-        return ct
+        return ct, ct_state
 
 
     def predict(self, x):

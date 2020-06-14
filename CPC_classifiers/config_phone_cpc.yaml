@@ -1,0 +1,21 @@
+data:
+    path: '/data/deepvk/librispeech/dev_clean/dev-clean'
+    lexicon: '/data/deepvk/librispeech-lexicon.txt'
+    waveform_len: 20480
+
+model:
+    cpc_config_path: 'CPC_true_NCE/config.yaml'
+    hidden_size: 256
+    freeze_cpc_model: False
+
+train:
+    lr: 0.02
+    epochs: 100
+    save_every: 10
+    test_split: 0.01
+    batch_size: 20
+    shuffle_data: True
+    save_name: 'phone_cpc_nce_classifier'
+    checkpoints_dir: 'cluster_checkpoints'
+    device: 'cuda:0'
+    cpc_checkpoint: 'cpc_nce_model_ctz_15_epoch.pt'
