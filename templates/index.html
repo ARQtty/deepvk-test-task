@@ -1,0 +1,26 @@
+<html>
+<title>web demo</title>
+  <script src="/js/aws-sdk.min.js"></script>
+  <script src="/js/aws-lex-audio.min.js"></script>
+  <script>
+    var audioControl = new LexAudio.audioControl();
+
+    function start_record(){
+      console.log('start rec');
+      audioControl.startRecording();
+    }
+
+    function stop_recording(){
+      console.log('stop rec');
+      audioControl.stopRecording();
+      console.log('exporting wav');
+      audioControl.exportWAV(function(blob){
+        audioControl.play(blob);
+      });
+    }
+  </script>
+<body>
+  <button onclick="start_record();">start rec</button>
+  <button onclick="stop_recording();">stop rec</button>
+</body>
+</html>

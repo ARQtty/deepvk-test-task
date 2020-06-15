@@ -1,0 +1,11 @@
+model:
+    cpc_config_path: 'templates/config_cpc.yaml'
+    hidden_size: 256
+    freeze_cpc_model: False
+
+
+train:
+    checkpoints_dir: 'templates'
+    save_name: 'speaker_cpc_nce_classifier'
+    device: 'cuda:0'
+    cpc_checkpoint: 'speaker_cpc_classifier_prod_10_epoch.pt'
