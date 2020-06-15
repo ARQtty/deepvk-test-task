@@ -13,12 +13,11 @@
 Сделана второпях в последний момент, но вполне годно работает. Для запуска:
 
 ### Поднять бэк
-`
-pip3 install flask_cors
-`
-`
-python3 web_demo_server.py
-`
+
+`pip3 install flask_cors`
+
+`python3 web_demo_server.py`
+
 Модель по дефолту переносится на видеокарту cuda:0, поменять девайс можно в `templates/config_classifier.yaml`
 
 
@@ -27,5 +26,9 @@ python3 web_demo_server.py
 За основу фронта взят чужой проект, дающий возможность записать, послушать и отправить свой (и не только!) голос, потому не было времени писать фронт самому
 
 В demo_frontend:
+
 `npm install`
+
 `gulp dev`
+
+![Demo screenshot](report_pictures/demo_screen.png)

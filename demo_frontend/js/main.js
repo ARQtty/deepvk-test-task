@@ -1,4 +1,14 @@
 REC_LENGTH_MS = 12810;
+colors = ['#00FF7F', '#FF69B4', '#FFA500', '#808080', '#ff00ff',
+          '#800080', '#ff0000', '#800000', '#ffff00', '#808000',
+          '#00ff00', '#008000', '#00ffff', '#008080', '#0000ff',
+          '#00FF7F', '#FF69B4', '#FFA500', '#808080', '#ff00ff',
+          '#800080', '#ff0000', '#800000', '#ffff00', '#808000',
+          '#00ff00', '#008000', '#00ffff', '#008080', '#0000ff',
+          '#00FF7F', '#FF69B4', '#FFA500', '#808080', '#ff00ff',
+          '#800080', '#ff0000', '#800000', '#ffff00', '#808000'];
+
+
 
 function send_audio(){
 
@@ -31,15 +41,9 @@ app  = new Vue({
                         audioUrl: 'test',
                         audio: ax
                     }
-
                     this.recordings.push(recording);
-
                 }
-
             }
-
-
-
         })
     },
     methods: {
@@ -47,14 +51,24 @@ app  = new Vue({
             localStorage.removeItem(item.id);
             this.recordings.splice(index, 1);
         },
-        send_to_server: function (item) {
-            console.log(item);
+        send_to_server: function (item, index) {
             $.ajax({
                 type: 'POST',
                 url: 'http://127.0.0.1:5022/audio',
                 data: {'k': item.audiob64},
                 success: function(response) {
-                    console.log('success sent', response);
+                    canvas = app.$refs.canv[index];
+                    ctx = canvas.getContext('2d');
+                    block_width = canvas.width / response.labels.length;
+                    block_height= canvas.height;
+
+                    for (let i in response.labels){
+                      label = response.labels[i];
+                      from = i*block_width;
+                      to = (i+1) * block_width;
+                      ctx.fillStyle = colors[label];
+                      ctx.fillRect(from, 0, to, canvas.height-3);
+                    }
                 }
             });
         },

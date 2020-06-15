@@ -24,11 +24,11 @@ def decode_base64(encoded):
 def create_tmp_file(binary_obj):
     with open('templates/tmp.webm', 'wb') as f:
         f.write(binary_obj)
-        
+
 def convert_tmp_file():
     cmd = 'ffmpeg -y -i templates/tmp.webm -vn templates/tmp.wav'
     subprocess.call(cmd.split())
-    
+
 def load_as_tensor(transform):
     wf, sampling_rate = torchaudio.load('templates/tmp.wav')
     wf = transform(wf)
@@ -47,10 +47,10 @@ class Model:
         clf_cfg = Hparam(classifier_config_path)
         cpc_cfg = Hparam(clf_cfg.model.cpc_config_path)
         self.device = clf_cfg.train.device
-        
+
         speakers_bank = pickle.load(open('templates/mean_speakers_vecs_dict.pkl', 'rb'))
         self.speakers, self.mean_vecs = list(speakers_bank.keys()), torch.stack(list(speakers_bank.values()), dim=0)
-        
+
         model_cpc = CPCModel_NCE(cpc_cfg).to(clf_cfg.train.device)
         self.model = SpeakerClassificationModel(model_cpc,
                                            clf_cfg.model.hidden_size,
@@ -58,8 +58,8 @@ class Model:
                                            clf_cfg).to(clf_cfg.train.device)
         self.model.load_state_dict(torch.load(clf_cfg.train.checkpoints_dir + '/' + clf_cfg.train.cpc_checkpoint))
         self.model.eval()
-        
-        
+
+
     def preprocess_tensor(self, tensor):
         assert len(tensor.size()) == 2
         length = tensor.size(1)
@@ -70,17 +70,17 @@ class Model:
             tensor = new_t
         else: # or throw it away
             tensor = tensor[0, :length]
-            
+
         tensor = tensor.view(-1, 20480)
         return tensor
-        
-    
+
+
     def get_scores(self, audio_batch):
         with torch.no_grad():
             preds = self.model(audio_batch.unsqueeze(1).to(self.device))
             return preds
-        
-    
+
+
     def get_labels_cosine(self, scores_batch):
         # by cosine dist
         tn1 = scores_batch / scores_batch.norm(dim=1).unsqueeze(1)
@@ -88,14 +88,18 @@ class Model:
         cosins = torch.mm(tn1, tn2)
         nearest_ixs = cosins.argmax(dim=1)
         return nearest_ixs
-    
-    
+
+
     def get_labels_eucl(self, scores_batch):
         # by eucleadian dist, worse
-        scores = torch.mm(scores_batch, self.mean_vecs.T)
+        scores = torch.mm(scores_batch, self.mean_vecs)
         nearest_ixs = scores.argmax(dim=1)
         return nearest_ixs
-    
+
+
+    def get_labels_max(self, scores_batch):
+        return scores_batch.argmax(dim=1)
+
 # ============================================================
 
 
@@ -113,7 +117,7 @@ def handle1():
     inp = model.preprocess_tensor(inp)
     scores = model.get_scores(inp)
     labels = model.get_labels_cosine(scores)
-    
+
     return jsonify({'status': 'ok', 'labels': labels.tolist()});
 
 

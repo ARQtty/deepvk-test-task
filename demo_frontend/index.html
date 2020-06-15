@@ -31,15 +31,6 @@
                     aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <!-- <div class="collapse navbar-collapse" id="navbarResponsive">
-                    <ul class="navbar-nav ml-auto">
-                        <li class="nav-item active">
-                            <a class="nav-link" href="#">Home
-                                <span class="sr-only">(current)</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div> -->
             </div>
         </nav>
 
@@ -72,47 +63,25 @@
                                     {{item.id}}
                                     <a class="btn badge badge-primary badge-pill" @click="play(item)">Play</a>
                                     <a class="btn badge badge-danger badge-pill" @click="deleteRecording(item,index)">Delete</a>
-                                    <a class="btn badge badge-danger badge-pill" @click="send_to_server(item)">Send to server</a>
+                                    <a class="btn badge badge-danger badge-pill" @click="send_to_server(item, index)">Выделить голоса</a>
+                                    <a class="btn badge  badge-pill"><canvas ref="canv" style="border-radius: 5px" width="200" height="30">canvas</canvas></a>
                                 </li>
 
                             </ul>
                         </div>
                     </div>
-
-                    <div class="row">
-                        <div class="col">
-                            <h4>Select and combine audio</h4>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col">
-                            <div v-if="recordings">
-
-                                <div class="custom-control custom-checkbox" v-for="(item,i) in recordings">
-                                    <input type="checkbox" class="custom-control-input" :id="'customCheck'+i" v-model="item.isSelected" :checked="item.isSelected">
-                                    <label class="custom-control-label" :for="'customCheck'+i">{{item.id}}</label>
-                                </div>
-                                <br>
-                                <button type="button" class="btn btn-secondary" @click="combineAudio">Combine and play</button>
-                                <br>
-                                <br>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- /.row -->
-
                 </div>
-                <!-- /.col-lg-9 -->
-
             </div>
-            В последний момент очень захотелось сделать демку распознавания спикеров с помощью модели, выглядит неказисто, код грязный, но она работает, причём достаточно точно
+            <br><br>
+            В последний момент очень захотелось сделать демку распознавания спикеров с помощью модели
             <br><br>
             <!-- /.row -->
             Как пользоваться
             <br><br>
-            После нажатия Start record в течение 13сек ваш голос записывается микрофоном и сохраняется _локально_ в вашем браузере. Вы можете прослушать запись, нажав Play, удалить и главное - Send to server (при этом сервер должен быть поднят на localhost:5022, в readme инструкция как включить). После отправки модель обработает файл и пришлёт результат некрасивенько в консоль. Открыв объект labels, вы увидите набор цифр - это id наиболее близкого по голосу спикера в каждую секунду записи. Если вы помычите на запись, то увидите, что модель распознаёт вас как одного спикера - логично. Если будете говорить по очереди - будет распознавать по очереди. Да, она шумит на начале и конце фразы и иногда багается на интонациях, но это из-за обучения на малом датасете
+            После нажатия Start record в течение 13сек ваш голос записывается микрофоном и сохраняется _локально_ в вашем браузере. Вы можете прослушать запись, нажав Play, удалить и главное - Send to server (при этом сервер должен быть поднят на localhost:5022, в readme инструкция как включить). Модель попытается отнести голос к одному из 40 известных ей. Результат классификации будет отражён цветов на полоске рядом с кнопкой. Если вы помычите на запись, то увидите, что модель распознаёт вас как одного спикера - логично. Если будете говорить по очереди - будет распознавать чередующиеся полоски. Модель уязвима к шуму, так как тренировалась не долго, но сейчас способна выделять спикеров
             <br><br>
-Чужой фронтенд с записью голоса взят потому что написать отсылку голосового на сервер + миллион конвертаций аудио + инфер модели + показ результата на фронте за 3 часа я могу, а красивый интерфейс на вуе - нет)0)
+
+            Чужой фронтенд с записью голоса взят потому что написать пересылку голосового на сервер + миллион конвертаций аудио + инфер модели + показ результата на фронте за 3 часа я могу, а красивый интерфейс на Vue - нет)0)
 
 
         </div>
